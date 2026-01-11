@@ -4,7 +4,9 @@ import User from "@/models/User";
 
 export const inngest = new Inngest({
   id: "quickcart-next",
+  eventKey: process.env.INNGEST_EVENT_KEY, // ← Agregar esto
 });
+
 
 // ✅ Función mejorada con manejo de errores
 export const syncUserCreation = inngest.createFunction(
