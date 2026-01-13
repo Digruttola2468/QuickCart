@@ -48,7 +48,7 @@ export const syncUserUpdate = inngest.createFunction(
   }, 
   { event:  'clerk/user.updated' }, 
   async ({ event, step }) => {
-    try {
+    /*try {
       const { id, first_name, last_name, email_addresses, image_url } = event. data;
       
       const userData = {
@@ -67,6 +67,29 @@ export const syncUserUpdate = inngest.createFunction(
       );
       
       return { success: true, userId: id };
+    } catch (error) {
+      throw error;
+    }*/
+   try {
+      const { id, first_name, last_name, email_addresses, image_url } = event. data;
+      
+      const userData = {
+        _id: id,
+        name: `${first_name || ''} ${last_name || ''}`.trim(),
+        email: email_addresses[0]?.email_address,
+        imageUrl: image_url,
+      };
+
+      await dbConnect();
+      
+      // ✅ Usar upsert para evitar duplicados
+      const result = await User.findOneAndUpdate(
+        { _id: id },
+        userData,
+        { upsert: true, new: true }
+      );
+      
+      return { success:  true, userId: id };
     } catch (error) {
       throw error;
     }
