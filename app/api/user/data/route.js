@@ -10,7 +10,6 @@ export async function GET (request) {
 
         await dbConnect();
         const user = await User.findById(userId);
-        console.log(user);
         
         if (!user) 
             return NextResponse.json({ success: false, message: "User Not Found" }, { status: 404 });

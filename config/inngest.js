@@ -71,7 +71,8 @@ export const syncUserUpdate = inngest.createFunction(
       throw error;
     }*/
    try {
-      const { id, first_name, last_name, email_addresses, image_url } = event. data;
+      const { id, first_name, last_name, email_addresses, image_url } = event.data;
+      console.log(event.data);
       
       const userData = {
         _id: id,
