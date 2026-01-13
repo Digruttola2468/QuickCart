@@ -1,6 +1,7 @@
 import { Inngest } from "inngest";
 import User from "@/models/User";
 import dbConnect from "./db";
+import Order from "@/models/Order";
 
 export const inngest = new Inngest({
   id: "quickcart-next",
@@ -10,14 +11,14 @@ export const inngest = new Inngest({
 
 // ✅ Función mejorada con manejo de errores
 export const syncUserCreation = inngest.createFunction(
-  { 
+  {
     id: 'sync-user-from-clerk'
-  }, 
+  },
   { event: 'clerk/user.created' },
   async ({ event, step }) => {
     try {
       const { id, first_name, last_name, email_addresses, image_url } = event.data;
-      
+
       const userData = {
         _id: id,
         name: `${first_name || ''} ${last_name || ''}`.trim(),
@@ -26,15 +27,15 @@ export const syncUserCreation = inngest.createFunction(
       };
 
       await dbConnect();
-      
+
       // ✅ Usar upsert para evitar duplicados
       const result = await User.findOneAndUpdate(
         { _id: id },
         userData,
         { upsert: true, new: true }
       );
-      
-      return { success:  true, userId: id };
+
+      return { success: true, userId: id };
     } catch (error) {
       throw error;
     }
@@ -43,14 +44,14 @@ export const syncUserCreation = inngest.createFunction(
 
 // ✅ Función de actualización corregida
 export const syncUserUpdate = inngest.createFunction(
-  { 
+  {
     id: 'update-user-from-clerk'
-  }, 
-  { event:  'clerk/user.updated' }, 
+  },
+  { event: 'clerk/user.updated' },
   async ({ event, step }) => {
     try {
-      const { id, first_name, last_name, email_addresses, image_url } = event. data;
-      
+      const { id, first_name, last_name, email_addresses, image_url } = event.data;
+
       const userData = {
         name: `${first_name || ''} ${last_name || ''}`.trim(),
         email: email_addresses[0]?.email_address,
@@ -58,61 +59,85 @@ export const syncUserUpdate = inngest.createFunction(
       };
 
       await dbConnect();
-      
+
       // ✅ Sintaxis correcta de findOneAndUpdate
       const result = await User.findOneAndUpdate(
-        { _id:  id }, // ✅ Filtro correcto
+        { _id: id }, // ✅ Filtro correcto
         { $set: userData },
         { new: true }
       );
-      
+
       return { success: true, userId: id };
     } catch (error) {
       throw error;
     }
-   /* 
-   ESTE ES EL CREATE DE CLERK ; como no me funcionaba el create y registro el update , puse el create en el update
-   try {
-      const { id, first_name, last_name, email_addresses, image_url } = event.data;
-      
-      const userData = {
-        _id: id,
-        name: `${first_name || ''} ${last_name || ''}`.trim(),
-        email: email_addresses[0]?.email_address,
-        imageUrl: image_url,
-      };
-
-      await dbConnect();
-      
-      // ✅ Usar upsert para evitar duplicados
-      const result = await User.findOneAndUpdate(
-        { _id: id },
-        userData,
-        { upsert: true, new: true }
-      );
-      
-      return { success:  true, userId: id };
-    } catch (error) {
-      throw error;
-    }*/
+    /* 
+    ESTE ES EL CREATE DE CLERK ; como no me funcionaba el create y registro el update , puse el create en el update
+    try {
+       const { id, first_name, last_name, email_addresses, image_url } = event.data;
+       
+       const userData = {
+         _id: id,
+         name: `${first_name || ''} ${last_name || ''}`.trim(),
+         email: email_addresses[0]?.email_address,
+         imageUrl: image_url,
+       };
+ 
+       await dbConnect();
+       
+       // ✅ Usar upsert para evitar duplicados
+       const result = await User.findOneAndUpdate(
+         { _id: id },
+         userData,
+         { upsert: true, new: true }
+       );
+       
+       return { success:  true, userId: id };
+     } catch (error) {
+       throw error;
+     }*/
   }
 );
 
 // ✅ Función de eliminación mejorada
 export const syncUserDeletion = inngest.createFunction(
-  { 
+  {
     id: 'delete-user-from-clerk'
-  }, 
-  { event: 'clerk/user.deleted' }, 
+  },
+  { event: 'clerk/user.deleted' },
   async ({ event, step }) => {
     try {
       const { id } = event.data;
       await dbConnect();
-      
+
       const result = await User.findByIdAndDelete(id);
       return { success: true, userId: id };
     } catch (error) {
       throw error;
     }
+  }
+);
+
+export const createUserOrder = inngest.createFunction(
+  {
+    id: 'create-user-order',
+    batchEvents: {
+      maxSize: 25,
+      timeout: '5s'
+    }
+  },
+  { event: 'order/created' },
+  async ({ events, step }) => {
+
+    const orders = events.map(event => {
+      return { userId: event.data.userId, items: event.data.items, amount: event.data.amount, address: event.data.address, date: event.data.date };
+    });
+
+    await dbConnect();
+
+    await Order.insertMany(orders);
+
+    return { success: true, processed: orders.length };
+
   }
 );
