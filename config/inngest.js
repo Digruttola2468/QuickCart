@@ -16,7 +16,7 @@ export const syncUserCreation = inngest.createFunction(
   { event: 'clerk/user.created' },
   async ({ event, step }) => {
     try {
-      const { id, first_name, last_name, email_addresses, image_url } = event. data;
+      const { id, first_name, last_name, email_addresses, image_url } = event.data;
       
       const userData = {
         _id: id,
@@ -48,7 +48,7 @@ export const syncUserUpdate = inngest.createFunction(
   }, 
   { event:  'clerk/user.updated' }, 
   async ({ event, step }) => {
-    /*try {
+    try {
       const { id, first_name, last_name, email_addresses, image_url } = event. data;
       
       const userData = {
@@ -69,10 +69,11 @@ export const syncUserUpdate = inngest.createFunction(
       return { success: true, userId: id };
     } catch (error) {
       throw error;
-    }*/
+    }
+   /* 
+   ESTE ES EL CREATE DE CLERK ; como no me funcionaba el create y registro el update , puse el create en el update
    try {
       const { id, first_name, last_name, email_addresses, image_url } = event.data;
-      console.log(event.data);
       
       const userData = {
         _id: id,
@@ -93,7 +94,7 @@ export const syncUserUpdate = inngest.createFunction(
       return { success:  true, userId: id };
     } catch (error) {
       throw error;
-    }
+    }*/
   }
 );
 
