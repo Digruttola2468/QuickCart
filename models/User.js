@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     imageUrl: { type: String, required: false },
     cartItems: { type: Object, default: {} }
-}, { _id: false, minimize: false }); // ✅ Agregado _id: false
+}, { _id: false, minimize: false }); 
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
